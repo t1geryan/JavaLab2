@@ -9,67 +9,49 @@ public class ExpressionEvaluator {
     public static double evaluate(String expression) {
         expression = expression.replaceAll("\\s", "");
 
-        List<String> tokens = infixToReversePolish(expression);
-
+        List<String> tokens = infixToPostfix(expression);
     }
 
-    private static List<String> infixToReversePolish(String expression) {
-        List<String> result = new ArrayList<>();
-        Stack<Character> operators = new Stack<>();
+    private static List<String> infixToPostfix(String infixExpression) {
+        List<String> postfixList = new ArrayList<>();
+        Stack<Character> stack = new Stack<>();
 
-        StringBuilder operand = new StringBuilder();
-        for (char c : expression.toCharArray()) {
-            if (Character.isDigit(c) || c == '.') {
-                operand.append(c);
+        for (int i = 0; i < infixExpression.length(); i++) {
+            char ch = infixExpression.charAt(i);
+            if (Character.isDigit(ch)) {
+                StringBuilder operand = new StringBuilder();
+                operand.append(ch);
+                while (i + 1 < infixExpression.length() && Character.isDigit(infixExpression.charAt(i + 1))) {
+                    operand.append(infixExpression.charAt(++i));
+                }
+                postfixList.add(operand.toString());
+            } else if (ch == '(') {
+                stack.push(ch);
+            } else if (ch == ')') {
+                while (!stack.isEmpty() && stack.peek() != '(') {
+                    postfixList.add(String.valueOf(stack.pop()));
+                }
+                stack.pop(); // Discard '('
             } else {
-                if (!operand.isEmpty()) {
-                    result.add(operand.toString());
-                    operand.setLength(0);
+                while (!stack.isEmpty() && precedence(ch) <= precedence(stack.peek())) {
+                    postfixList.add(String.valueOf(stack.pop()));
                 }
-                if (c == '(') {
-                    operators.push(c);
-                } else if (c == ')') {
-                    while (!operators.isEmpty() && operators.peek() != '(') {
-                        result.add(operators.pop().toString());
-                    }
-                    if (!operators.isEmpty() && operators.peek() == '(') {
-                        operators.pop();
-                    } else {
-                        throw new IllegalArgumentException("Invalid expression");
-                    }
-                } else if (isOperator(c)) {
-                    while (!operators.isEmpty() && hasHigherPrecedence(c, operators.peek())) {
-                        result.add(operators.pop().toString());
-                    }
-                    operators.push(c);
-                } else {
-                    throw new IllegalArgumentException("Invalid character: " + c);
-                }
+                stack.push(ch);
             }
         }
 
-        if (!operand.isEmpty()) {
-            result.add(operand.toString());
+        while (!stack.isEmpty()) {
+            postfixList.add(String.valueOf(stack.pop()));
         }
 
-        while (!operators.isEmpty()) {
-            if (operators.peek() == '(' || operators.peek() == ')') {
-                throw new IllegalArgumentException("Invalid expression");
-            }
-            result.add(operators.pop().toString());
-        }
-
-        return result;
+        return postfixList;
     }
 
-    private static boolean isOperator(char c) {
-        return c == '+' || c == '-' || c == '*' || c == '/';
-    }
-
-    private static boolean hasHigherPrecedence(char op1, char op2) {
-        if (op2 == '(' || op2 == ')') {
-            return false;
-        }
-        return (op1 == '*' || op1 == '/') && (op2 == '+' || op2 == '-');
+    private static int precedence(char operator) {
+        return switch (operator) {
+            case '+', '-' -> 1;
+            case '*', '/' -> 2;
+            default -> -1;
+        };
     }
 }
