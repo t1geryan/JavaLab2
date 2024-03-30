@@ -5,6 +5,12 @@ import java.util.EmptyStackException;
 import java.util.List;
 import java.util.Stack;
 
+/**
+ * Class for calculating the value of a mathematical expression containing
+ * round brackets, operators '+', '-', '/', '*' and numbers
+ * <p>
+ * Example: ExpressionEvaluator("((3 + 4) * 5 - (2 + 1)) / (3 * 2)").evaluate();
+ */
 public class ExpressionEvaluator {
     String expression;
 
@@ -12,9 +18,19 @@ public class ExpressionEvaluator {
         this.expression = expression;
     }
 
-    public double evaluate() {
+    /**
+     * Calculates the value of a mathematical expression.
+     * Expression can contain round brackets, base operators '+', '-', '/', '*' and numbers.
+     * Expression can contain any count of spaces.
+     *
+     * @return value of the mathematical expression
+     * @throws IllegalArgumentException if illegal expression or unknown symbols are passed.
+     * @throws ArithmeticException      when there is division by zero
+     */
+    public double evaluate() throws IllegalArgumentException, ArithmeticException {
         expression = expression.replaceAll("\\s", "");
 
+        // list of tokens on postfix notation
         List<String> tokens = infixToPostfix(expression);
 
         Stack<Double> operands = new Stack<>();
