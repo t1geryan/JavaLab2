@@ -35,29 +35,34 @@ public class ExpressionEvaluator {
     private List<String> infixToPostfix(String infixExpression) {
         List<String> postfixList = new ArrayList<>();
         Stack<Character> stack = new Stack<>();
+        boolean expectingOperand = true;
 
         try {
             for (int i = 0; i < infixExpression.length(); i++) {
                 char ch = infixExpression.charAt(i);
-                if (Character.isDigit(ch)) {
+                if (Character.isDigit(ch) || (ch == '-' && expectingOperand && (i == 0 || !Character.isDigit(infixExpression.charAt(i - 1))))) {
                     StringBuilder operand = new StringBuilder();
                     operand.append(ch);
-                    while (i + 1 < infixExpression.length() && Character.isDigit(infixExpression.charAt(i + 1))) {
+                    while (i + 1 < infixExpression.length() && (Character.isDigit(infixExpression.charAt(i + 1)) || infixExpression.charAt(i + 1) == '.')) {
                         operand.append(infixExpression.charAt(++i));
                     }
                     postfixList.add(operand.toString());
+                    expectingOperand = false;
                 } else if (ch == '(') {
                     stack.push(ch);
+                    expectingOperand = true;
                 } else if (ch == ')') {
                     while (!stack.isEmpty() && stack.peek() != '(') {
                         postfixList.add(String.valueOf(stack.pop()));
                     }
                     stack.pop(); // Discard '('
+                    expectingOperand = false;
                 } else if (isOperator(ch)) {
                     while (!stack.isEmpty() && precedence(ch) <= precedence(stack.peek())) {
                         postfixList.add(String.valueOf(stack.pop()));
                     }
                     stack.push(ch);
+                    expectingOperand = true;
                 } else {
                     throw new IllegalArgumentException("Unknown symbol in expression");
                 }
