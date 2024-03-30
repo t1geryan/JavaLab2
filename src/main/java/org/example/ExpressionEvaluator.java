@@ -10,6 +10,20 @@ public class ExpressionEvaluator {
         expression = expression.replaceAll("\\s", "");
 
         List<String> tokens = infixToPostfix(expression);
+
+        Stack<Double> operands = new Stack<>();
+
+        for (String token : tokens) {
+            if (isNumeric(token)) {
+                operands.push(Double.parseDouble(token));
+            } else {
+                double operand2 = operands.pop();
+                double operand1 = operands.pop();
+                operands.push(performOperation(token.charAt(0), operand1, operand2));
+            }
+        }
+
+        return operands.pop();
     }
 
     private static List<String> infixToPostfix(String infixExpression) {
@@ -52,6 +66,30 @@ public class ExpressionEvaluator {
             case '+', '-' -> 1;
             case '*', '/' -> 2;
             default -> -1;
+        };
+    }
+
+    private static boolean isNumeric(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private static double performOperation(char operator, double a, double b) {
+        return switch (operator) {
+            case '+' -> a + b;
+            case '-' -> a - b;
+            case '*' -> a * b;
+            case '/' -> {
+                if (b == 0) {
+                    throw new ArithmeticException("Division by zero");
+                }
+                yield a / b;
+            }
+            default -> throw new IllegalArgumentException("Unknown operator: " + operator);
         };
     }
 }
